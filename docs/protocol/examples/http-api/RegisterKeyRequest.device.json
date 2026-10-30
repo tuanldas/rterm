@@ -1,0 +1,9 @@
+{
+  "kind": "device",
+  "name": "Pixel 8",
+  "public_key": "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBA++scOTZGho6ukNB00n5jUgqG1yVhajAZA896Ix0kuZ0iVFpkgO1yqkOp3UJCs1/Cc2eSk9nOSw3qvu2PMEpXg=",
+  "nonce": "dbC0fc5Bp+jv9wTVrfvATQ==",
+  "sig": "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAABKAAAAIQDy+YJuho4iUb5geQAkOBVz7E721UcM32Li/F8HuQjgKQAAACEAny0P4ee5UJ06igJ/cL5TlDswAhsk/VxTDfToVv3YNb0=",
+  "hardware_backed": true,
+  "security_level": "tee"
+}

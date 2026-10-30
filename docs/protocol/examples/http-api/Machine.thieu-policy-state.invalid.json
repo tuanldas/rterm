@@ -1,0 +1,27 @@
+{
+  "id": "0192f3a1-2b4c-7d5e-8f60-718293a4b5c6",
+  "name": "Máy build",
+  "hostname": "build-01",
+  "os": "linux",
+  "arch": "amd64",
+  "os_user": "deploy",
+  "addresses": [
+    "100.64.0.12:7022"
+  ],
+  "host_key_fp": "SHA256:Ki2djaf3S+HaiVlOadmqASNVxc1W5JVYsTBv0CzgDe8",
+  "online": true,
+  "session_count": 2,
+  "last_seen_at": 1793232000000,
+  "agent_version": "0.1.0",
+  "agent_capabilities": [
+    "session.v1",
+    "events.v1",
+    "policy.v1",
+    "status.v1",
+    "audit.v1"
+  ],
+  "allowed_cidrs": [
+    "100.64.0.0/10"
+  ],
+  "role": "owner"
+}

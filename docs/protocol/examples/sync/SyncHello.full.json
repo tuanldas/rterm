@@ -1,0 +1,15 @@
+{
+  "proto": 1,
+  "machine_id": "0192f3a1-2b4c-7d5e-8f60-718293a4b5c6",
+  "agent_version": "0.1.0",
+  "capabilities": [
+    "policy.v1",
+    "status.v1",
+    "audit.v1",
+    "emergency.v1"
+  ],
+  "applied": {
+    "epoch": 3,
+    "rev": 41
+  }
+}

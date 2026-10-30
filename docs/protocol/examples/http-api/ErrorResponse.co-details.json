@@ -1,0 +1,9 @@
+{
+  "error": {
+    "code": "auth.totp_enrollment_required",
+    "message": "tài khoản chưa đăng ký TOTP",
+    "details": {
+      "totp_enrollment_token": "tok_totp_enroll_example"
+    }
+  }
+}

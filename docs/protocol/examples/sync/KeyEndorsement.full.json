@@ -1,0 +1,7 @@
+{
+  "key_id": "policy-key-2",
+  "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOB+i4WRFLd+VOcZ96Xc7MkqQGwczD6bNdpUsWX+1ylD",
+  "not_before": 1793235600000,
+  "signer_key_id": "policy-key-1",
+  "sig": "AAAAC3NzaC1lZDI1NTE5AAAAQMxwoLH/4tjLfdE7XXeUsnCRVupYANq6WolD6NwRshGL3dIz+68lfao44JZAJ1a/bCdmp8yVr96XFJ+QsN7xeg8="
+}

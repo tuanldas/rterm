@@ -1,0 +1,5 @@
+{
+  "kind": "ssh",
+  "name": "Khóa laptop",
+  "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFLuKRZ7EtZa0uJVKAcYn9+tEB2uJLaClDF/GA/BnN52 nguoi.dung@laptop"
+}

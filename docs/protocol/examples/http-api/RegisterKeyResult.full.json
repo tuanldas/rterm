@@ -1,0 +1,15 @@
+{
+  "key": {
+    "id": "0192f3a3-4d6e-7f70-a182-93a4b5c6d7e8",
+    "kind": "device",
+    "name": "Pixel 8",
+    "fp": "SHA256:L8U/0CR4JuX0nrKI9MHCh8XGt2UC69AA7ANfxjSVyeA",
+    "public_key": "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBA++scOTZGho6ukNB00n5jUgqG1yVhajAZA896Ix0kuZ0iVFpkgO1yqkOp3UJCs1/Cc2eSk9nOSw3qvu2PMEpXg=",
+    "hardware_backed": true,
+    "created_at": 1793232000000,
+    "device_id": "0192f3a2-3c5d-7e6f-9071-8293a4b5c6d7"
+  },
+  "affected_machine_ids": [
+    "0192f3a1-2b4c-7d5e-8f60-718293a4b5c6"
+  ]
+}

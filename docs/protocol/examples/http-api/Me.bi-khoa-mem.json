@@ -1,0 +1,7 @@
+{
+  "id": "0192f3a0-7c3e-7b1a-9d4e-5a6b7c8d9e01",
+  "email": "owner@example.test",
+  "totp_enabled": true,
+  "soft_locked_until": 1793318400000,
+  "created_at": 1793145600000
+}

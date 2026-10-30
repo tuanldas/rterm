@@ -1,0 +1,13 @@
+{
+  "proto": 1,
+  "agent": {
+    "name": "demo-agent",
+    "version": "0.1.0"
+  },
+  "machine_id": "",
+  "os_user": "deploy",
+  "capabilities": [
+    "session.v1",
+    "events.v1"
+  ]
+}

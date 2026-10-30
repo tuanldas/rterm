@@ -1,0 +1,19 @@
+{
+  "proto": 1,
+  "client": {
+    "name": "demo-app",
+    "version": "0.1.0",
+    "x_build": "abc123"
+  },
+  "capabilities": [
+    "session.v1",
+    "events.v1",
+    "tuong_lai.v1"
+  ],
+  "x_future": {
+    "a": [
+      1,
+      2
+    ]
+  }
+}

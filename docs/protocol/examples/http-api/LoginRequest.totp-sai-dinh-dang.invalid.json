@@ -1,0 +1,6 @@
+{
+  "email": "owner@example.test",
+  "password": "x",
+  "totp": "12a456",
+  "device_name": "Pixel 8"
+}

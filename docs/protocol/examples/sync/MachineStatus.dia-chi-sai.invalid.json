@@ -1,0 +1,13 @@
+{
+  "session_count": 0,
+  "addresses": [
+    "khong-co-cong"
+  ],
+  "agent_version": "0.1.0",
+  "os": "linux",
+  "arch": "amd64",
+  "applied": {
+    "epoch": 3,
+    "rev": 41
+  }
+}

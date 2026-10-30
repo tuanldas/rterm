@@ -1,0 +1,18 @@
+{
+  "devices": [
+    {
+      "id": "0192f3a2-3c5d-7e6f-9071-8293a4b5c6d7",
+      "name": "Pixel 8",
+      "created_at": 1793228400000,
+      "last_used_at": 1793232000000,
+      "current": true
+    },
+    {
+      "id": "0192f3a2-3c5d-7e6f-9071-8293a4b5c6d8",
+      "name": "Máy tính bảng",
+      "created_at": 1792972800000,
+      "last_used_at": 1793145600000,
+      "current": false
+    }
+  ]
+}

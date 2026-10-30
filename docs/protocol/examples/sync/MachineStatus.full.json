@@ -1,0 +1,40 @@
+{
+  "session_count": 2,
+  "session_accounts": [
+    "0192f3a0-7c3e-7b1a-9d4e-5a6b7c8d9e01",
+    "0192f3a0-7c3e-7b1a-9d4e-5a6b7c8d9e02"
+  ],
+  "addresses": [
+    "100.64.0.12:7022",
+    "[fd7a:115c:a1e0::c]:7022",
+    "127.0.0.1:7022"
+  ],
+  "holder_versions": [
+    "0.1.0"
+  ],
+  "agent_version": "0.1.0",
+  "os": "linux",
+  "arch": "amd64",
+  "applied": {
+    "epoch": 3,
+    "rev": 41
+  },
+  "last_reject": {
+    "epoch": 3,
+    "rev": 40,
+    "reason": "stale",
+    "at": 1793231995000
+  },
+  "local_revocations": [
+    {
+      "id": "rev-01",
+      "key_fp": "SHA256:ZlmPyxS9u+M74V0KbAXz/CRztTVfMh/26ub3yOv5Xc0",
+      "expires_at": 1793836800000
+    },
+    {
+      "id": "rev-02",
+      "account_id": "0192f3a0-7c3e-7b1a-9d4e-5a6b7c8d9e02",
+      "expires_at": 1793491200000
+    }
+  ]
+}

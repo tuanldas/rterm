@@ -1,0 +1,9 @@
+{
+  "machine_id": "0192f3a1-2b4c-7d5e-8f60-718293a4b5c6",
+  "policy_keys": [
+    {
+      "key_id": "policy-key-1",
+      "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMOUF1CTeTtXSL3t8tyefz93U9O53O0BbbVqvEjIX8kw"
+    }
+  ]
+}

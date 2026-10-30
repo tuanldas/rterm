@@ -1,0 +1,11 @@
+{
+  "proto": 1,
+  "client": {
+    "name": "demo-app",
+    "version": "0.1.0"
+  },
+  "capabilities": [
+    "session.v1",
+    "events.v1"
+  ]
+}

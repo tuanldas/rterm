@@ -1,0 +1,10 @@
+{
+  "access_token": "tok_access_example",
+  "refresh_token": "tok_refresh_example",
+  "access_expires_at": 1793232900000,
+  "recovery_codes": [
+    "k3f9-m2x8-q7w1",
+    "p4d6-t8r2-n5v9",
+    "h7j1-b3c5-z8x4"
+  ]
+}

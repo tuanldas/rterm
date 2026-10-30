@@ -1,0 +1,8 @@
+{
+  "topic": "metrics.cpu",
+  "ts": 1793232000000,
+  "data": {
+    "cpu": 0.5,
+    "x_don_vi": "ratio"
+  }
+}

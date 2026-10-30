@@ -1,0 +1,41 @@
+{
+  "proto": 1,
+  "machine_id": "0192f3a1-2b4c-7d5e-8f60-718293a4b5c6",
+  "os_user": "deploy",
+  "epoch": 3,
+  "rev": 42,
+  "issued_at": 1793232000000,
+  "full": false,
+  "grants": [
+    {
+      "account_id": "0192f3a0-7c3e-7b1a-9d4e-5a6b7c8d9e01",
+      "role": "owner",
+      "keys": [
+        {
+          "fp": "SHA256:TomPHE8d0jbwzLSmfpoBMZ8QSCaHUg/4WHbP6YKreww",
+          "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFLuKRZ7EtZa0uJVKAcYn9+tEB2uJLaClDF/GA/BnN52"
+        },
+        {
+          "fp": "SHA256:L8U/0CR4JuX0nrKI9MHCh8XGt2UC69AA7ANfxjSVyeA",
+          "public_key": "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBA++scOTZGho6ukNB00n5jUgqG1yVhajAZA896Ix0kuZ0iVFpkgO1yqkOp3UJCs1/Cc2eSk9nOSw3qvu2PMEpXg="
+        }
+      ]
+    },
+    {
+      "account_id": "0192f3a0-7c3e-7b1a-9d4e-5a6b7c8d9e02",
+      "role": "member",
+      "keys": [
+        {
+          "fp": "SHA256:ZlmPyxS9u+M74V0KbAXz/CRztTVfMh/26ub3yOv5Xc0",
+          "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBgOJmtBZyQd6SY373qqKQAS6qpUXRzXn6ow3CPmroN7"
+        }
+      ]
+    }
+  ],
+  "emergency": {
+    "enabled": false
+  },
+  "clear_local_revocations": [
+    "rev-01"
+  ]
+}

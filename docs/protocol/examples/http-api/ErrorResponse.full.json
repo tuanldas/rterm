@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "auth.invalid_credentials",
+    "message": "email, mật khẩu hoặc mã xác thực không đúng"
+  }
+}

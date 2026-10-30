@@ -1,0 +1,14 @@
+{
+  "user_code": "BCDF-GHJK",
+  "hostname": "build-01",
+  "os": "linux",
+  "arch": "amd64",
+  "os_user": "deploy",
+  "requested_ip": "203.0.113.7",
+  "allowed_cidrs": [
+    "100.64.0.0/10"
+  ],
+  "host_key_fp": "SHA256:Ki2djaf3S+HaiVlOadmqASNVxc1W5JVYsTBv0CzgDe8",
+  "requested_at": 1793232000000,
+  "expires_at": 1793232600000
+}

@@ -1,0 +1,7 @@
+{
+  "email": "owner@example.test",
+  "emergency_secret": "mat-khau-khan-cap-rieng-cho-may",
+  "totp": "12345",
+  "os_user": "deploy",
+  "remote_ip": "100.64.0.20"
+}

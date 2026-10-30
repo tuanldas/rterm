@@ -1,0 +1,11 @@
+{
+  "host_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILSeRySWaX6oYLi66kRfgET1pdDmDevP0EaN9rEeI183",
+  "hostname": "build-01",
+  "os": "linux",
+  "arch": "amd64",
+  "os_user": "deploy",
+  "agent_version": "0.1.0",
+  "allowed_cidrs": [
+    "100.64.0.0/10"
+  ]
+}

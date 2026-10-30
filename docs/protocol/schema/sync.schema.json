@@ -1,0 +1,300 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Đồng bộ agent–server (bản nháp v0)",
+  "description": "Thông điệp của kênh WebSocket GET /v1/agent/sync. Tham số và kết quả của từng method xem docs/protocol/sync.md. Không có additionalProperties:false: bên nhận bỏ qua trường lạ.",
+  "$defs": {
+    "Fingerprint": {
+      "description": "Vân tay khoá công khai: SHA256: cộng base64 không đệm của SHA-256 trên blob khoá.",
+      "type": "string",
+      "pattern": "^SHA256:[A-Za-z0-9+/]{43}$"
+    },
+    "PublicKeyLine": {
+      "description": "Khoá công khai dạng một dòng authorized_keys, không kèm tuỳ chọn hay ghi chú: <kiểu khoá> <base64>.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9@._-]+ [A-Za-z0-9+/]+={0,2}$"
+    },
+    "Signature": {
+      "description": "Chữ ký dạng SSH (string(định dạng) ghép string(blob), RFC 4253 §6.6) mã hoá base64 chuẩn có đệm.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9+/]{8,}={0,2}$"
+    },
+    "Nonce": {
+      "description": "16 byte ngẫu nhiên (128 bit) mã hoá base64 chuẩn có đệm.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9+/]{22}==$"
+    },
+    "Address": {
+      "description": "Địa chỉ lắng nghe dạng host:port; IPv6 đặt trong ngoặc vuông.",
+      "type": "string",
+      "pattern": "^(\\[[0-9a-fA-F:.]+\\]|[A-Za-z0-9._-]+):[0-9]{1,5}$"
+    },
+    "CIDR": {
+      "description": "Dải địa chỉ IPv4 hoặc IPv6 dạng CIDR.",
+      "type": "string",
+      "pattern": "^[0-9a-fA-F:.]+/[0-9]{1,3}$"
+    },
+    "KeyID": {
+      "description": "Mã khoá ký chính sách do server đặt, không trong suốt với agent.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+    },
+    "Applied": {
+      "description": "Phiên bản snapshot quyền agent đang áp dụng, so theo thứ tự từ điển (epoch, rev).",
+      "type": "object",
+      "required": ["epoch", "rev"],
+      "properties": {
+        "epoch": { "type": "integer", "minimum": 0 },
+        "rev": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "SyncHello": {
+      "description": "Tham số của hello (agent → server), yêu cầu đầu tiên của kênh.",
+      "type": "object",
+      "required": ["proto", "machine_id", "agent_version", "applied"],
+      "properties": {
+        "proto": { "const": 1 },
+        "machine_id": { "$ref": "rpc.schema.json#/$defs/ID" },
+        "agent_version": { "type": "string", "minLength": 1 },
+        "capabilities": {
+          "type": "array",
+          "items": { "$ref": "rpc.schema.json#/$defs/Capability" },
+          "uniqueItems": true
+        },
+        "applied": { "$ref": "#/$defs/Applied" }
+      }
+    },
+    "SyncHelloResult": {
+      "description": "Kết quả của hello: thử thách để agent ký trong auth.",
+      "type": "object",
+      "required": ["proto", "server_version", "nonce"],
+      "properties": {
+        "proto": { "const": 1 },
+        "server_version": { "type": "string", "minLength": 1 },
+        "nonce": { "$ref": "#/$defs/Nonce" },
+        "capabilities": {
+          "type": "array",
+          "items": { "$ref": "rpc.schema.json#/$defs/Capability" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "SyncAuth": {
+      "description": "Tham số của auth (agent → server): chữ ký của host key trên thử thách, ngữ cảnh sync-auth/1.",
+      "type": "object",
+      "required": ["sig"],
+      "properties": {
+        "sig": { "$ref": "#/$defs/Signature" }
+      }
+    },
+    "GrantKey": {
+      "type": "object",
+      "required": ["fp", "public_key"],
+      "properties": {
+        "fp": { "$ref": "#/$defs/Fingerprint" },
+        "public_key": { "$ref": "#/$defs/PublicKeyLine" }
+      }
+    },
+    "Grant": {
+      "description": "Quyền của một tài khoản trên máy. Không chứa email. Vai trò lạ phải được coi là member.",
+      "type": "object",
+      "required": ["account_id", "role"],
+      "properties": {
+        "account_id": { "$ref": "rpc.schema.json#/$defs/ID" },
+        "role": { "type": "string", "minLength": 1 },
+        "keys": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/GrantKey" }
+        }
+      }
+    },
+    "Emergency": {
+      "description": "Trạng thái đăng nhập khẩn cấp của máy.",
+      "type": "object",
+      "required": ["enabled"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "account_ids": {
+          "type": "array",
+          "items": { "$ref": "rpc.schema.json#/$defs/ID" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "PolicySnapshot": {
+      "description": "Toàn bộ quyền truy cập của một máy. Luôn đầy đủ (full:true): grants rỗng nghĩa là không ai được vào, không phải không đổi.",
+      "type": "object",
+      "required": ["proto", "machine_id", "os_user", "epoch", "rev", "issued_at", "full", "grants", "emergency"],
+      "properties": {
+        "proto": { "const": 1 },
+        "machine_id": { "$ref": "rpc.schema.json#/$defs/ID" },
+        "os_user": { "type": "string", "minLength": 1 },
+        "epoch": { "type": "integer", "minimum": 0 },
+        "rev": { "type": "integer", "minimum": 0 },
+        "issued_at": { "$ref": "rpc.schema.json#/$defs/Timestamp" },
+        "full": { "const": true },
+        "grants": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Grant" }
+        },
+        "emergency": { "$ref": "#/$defs/Emergency" },
+        "clear_local_revocations": {
+          "type": "array",
+          "items": { "$ref": "rpc.schema.json#/$defs/ID" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "SignedEnvelope": {
+      "description": "Tham số của policy.apply (server → agent). Chữ ký phủ lên đúng các byte sau khi giải base64 payload, ngữ cảnh policy-snapshot/1; payload phải giải ra một PolicySnapshot.",
+      "type": "object",
+      "required": ["payload", "sig", "key_id"],
+      "properties": {
+        "payload": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "contentMediaType": "application/json",
+          "contentSchema": { "$ref": "#/$defs/PolicySnapshot" }
+        },
+        "sig": { "$ref": "#/$defs/Signature" },
+        "key_id": { "$ref": "#/$defs/KeyID" }
+      }
+    },
+    "PolicyKey": {
+      "description": "Khoá công khai ký snapshot quyền mà agent tin.",
+      "type": "object",
+      "required": ["key_id", "public_key"],
+      "properties": {
+        "key_id": { "$ref": "#/$defs/KeyID" },
+        "public_key": { "$ref": "#/$defs/PublicKeyLine" }
+      }
+    },
+    "KeyEndorsement": {
+      "description": "Tham số của policy.keys (server → agent): khoá đang tin chứng thực một khoá ký mới, ngữ cảnh policy-key-rollover/1.",
+      "type": "object",
+      "required": ["key_id", "public_key", "not_before", "signer_key_id", "sig"],
+      "properties": {
+        "key_id": { "$ref": "#/$defs/KeyID" },
+        "public_key": { "$ref": "#/$defs/PublicKeyLine" },
+        "not_before": { "$ref": "rpc.schema.json#/$defs/Timestamp" },
+        "signer_key_id": { "$ref": "#/$defs/KeyID" },
+        "sig": { "$ref": "#/$defs/Signature" }
+      }
+    },
+    "Reject": {
+      "description": "Lần agent từ chối snapshot gần nhất. reason là tập mở.",
+      "type": "object",
+      "required": ["epoch", "rev", "reason", "at"],
+      "properties": {
+        "epoch": { "type": "integer", "minimum": 0 },
+        "rev": { "type": "integer", "minimum": 0 },
+        "reason": { "type": "string", "minLength": 1 },
+        "at": { "$ref": "rpc.schema.json#/$defs/Timestamp" }
+      }
+    },
+    "LocalRevocation": {
+      "description": "Thu hồi đặt ngay trên máy, theo khoá (key_fp) hoặc theo tài khoản (account_id).",
+      "type": "object",
+      "required": ["id", "expires_at"],
+      "properties": {
+        "id": { "$ref": "rpc.schema.json#/$defs/ID" },
+        "key_fp": { "$ref": "#/$defs/Fingerprint" },
+        "account_id": { "$ref": "rpc.schema.json#/$defs/ID" },
+        "expires_at": { "$ref": "rpc.schema.json#/$defs/Timestamp" }
+      }
+    },
+    "MachineStatus": {
+      "description": "Tham số của notification machine.status (agent → server).",
+      "type": "object",
+      "required": ["session_count", "agent_version", "os", "arch", "applied"],
+      "properties": {
+        "session_count": { "type": "integer", "minimum": 0 },
+        "session_accounts": {
+          "type": "array",
+          "items": { "$ref": "rpc.schema.json#/$defs/ID" },
+          "uniqueItems": true
+        },
+        "addresses": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Address" }
+        },
+        "holder_versions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "agent_version": { "type": "string", "minLength": 1 },
+        "os": { "type": "string", "minLength": 1 },
+        "arch": { "type": "string", "minLength": 1 },
+        "applied": { "$ref": "#/$defs/Applied" },
+        "last_reject": { "$ref": "#/$defs/Reject" },
+        "local_revocations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/LocalRevocation" }
+        }
+      }
+    },
+    "AuditEvent": {
+      "description": "Sự kiện kiểm toán do máy báo.",
+      "type": "object",
+      "required": ["event_id", "ts", "action"],
+      "properties": {
+        "event_id": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+        "ts": { "$ref": "rpc.schema.json#/$defs/Timestamp" },
+        "action": { "type": "string", "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$" },
+        "account_id": { "$ref": "rpc.schema.json#/$defs/ID" },
+        "target": { "type": "string" },
+        "result": { "type": "string" },
+        "ip": { "type": "string", "minLength": 2 },
+        "count": { "type": "integer", "minimum": 1 },
+        "meta": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "AuditReport": {
+      "description": "Tham số của audit.report (agent → server): một lô sự kiện.",
+      "type": "object",
+      "required": ["events"],
+      "properties": {
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/AuditEvent" }
+        }
+      }
+    },
+    "AuditAck": {
+      "description": "Kết quả của audit.report: mọi sự kiện server đã xử lý xong, agent chỉ xoá những sự kiện này khỏi hàng đợi.",
+      "type": "object",
+      "required": ["acked"],
+      "properties": {
+        "acked": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[0-9a-f]{32}$" }
+        }
+      }
+    },
+    "EmergencyVerifyParams": {
+      "description": "Tham số của emergency.verify (agent → server), cần capability emergency.v1. Tuyệt đối không có trường mật khẩu tài khoản: chỉ bí mật khẩn cấp dùng riêng cho máy này.",
+      "type": "object",
+      "required": ["email", "emergency_secret", "totp", "os_user", "remote_ip"],
+      "properties": {
+        "email": { "type": "string", "minLength": 3 },
+        "emergency_secret": { "type": "string", "minLength": 1 },
+        "totp": { "type": "string", "pattern": "^[0-9]{6}$" },
+        "os_user": { "type": "string", "minLength": 1 },
+        "remote_ip": { "type": "string", "minLength": 2 },
+        "password": false
+      }
+    },
+    "EmergencyVerifyResult": {
+      "description": "Kết quả khi xác minh thành công. Thất bại là lỗi -32001 đồng nhất, không phân biệt lý do.",
+      "type": "object",
+      "required": ["account_id"],
+      "properties": {
+        "account_id": { "$ref": "rpc.schema.json#/$defs/ID" }
+      }
+    }
+  }
+}

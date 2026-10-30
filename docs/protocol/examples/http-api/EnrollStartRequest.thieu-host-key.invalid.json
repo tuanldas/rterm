@@ -1,0 +1,7 @@
+{
+  "hostname": "build-01",
+  "os": "linux",
+  "arch": "amd64",
+  "os_user": "deploy",
+  "agent_version": "0.1.0"
+}

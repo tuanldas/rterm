@@ -1,0 +1,63 @@
+{
+  "protos": { "api": 1, "rpc": 1, "sync": 1 },
+  "api_prefix": "/v1",
+  "agent_sync_path": "/v1/agent/sync",
+  "session_env_vars": ["RTERM_SESSION"],
+  "session_env_new": "new",
+  "exit_session_not_found": 66,
+  "stderr_session_not_found": "session_not_found",
+  "subsystem_agent_rpc": "agent-rpc",
+  "rpc_methods": [
+    "hello",
+    "session.list",
+    "session.create",
+    "session.close",
+    "session.size",
+    "events.subscribe"
+  ],
+  "rpc_notifications": ["event"],
+  "event_topics": [
+    "session.created",
+    "session.closed",
+    "session.attached",
+    "session.detached",
+    "session.resized"
+  ],
+  "sync_methods": [
+    "hello",
+    "auth",
+    "policy.apply",
+    "policy.keys",
+    "machine.status",
+    "audit.report",
+    "emergency.verify"
+  ],
+  "capabilities": [
+    "session.v1",
+    "events.v1",
+    "policy.v1",
+    "status.v1",
+    "audit.v1",
+    "emergency.v1",
+    "devices.v1",
+    "groups.v1",
+    "sharing.v1",
+    "ssh_keys.v1"
+  ],
+  "signing_contexts": [
+    "policy-snapshot/1",
+    "policy-key-rollover/1",
+    "sync-auth/1",
+    "enroll-pop/1",
+    "device-key-pop/1",
+    "release-keyset/1",
+    "release-manifest/1"
+  ],
+  "jsonrpc_error_codes": {
+    "server_busy": -32000,
+    "unauthorized": -32001,
+    "not_found": -32002,
+    "limit_exceeded": -32003,
+    "conflict": -32004
+  }
+}

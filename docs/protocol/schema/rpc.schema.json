@@ -1,0 +1,202 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RPC của agent (bản nháp v0)",
+  "description": "Thông điệp của subsystem SSH agent-rpc. Tham số và kết quả của từng method xem docs/protocol/rpc.md. Không có additionalProperties:false: bên nhận bỏ qua trường lạ.",
+  "$defs": {
+    "ID": {
+      "description": "Mã không trong suốt của đối tượng (phiên, tài khoản, máy…). Bộ ký tự hẹp vì mã phiên đi vào biến môi trường, tên tệp và tên pipe.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,64}$"
+    },
+    "Timestamp": {
+      "description": "Unix mili-giây UTC.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "Capability": {
+      "description": "Tên nhóm tính năng có version, dạng <miền>.v<n>.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.v[1-9][0-9]*$"
+    },
+    "Dimension": {
+      "description": "Số cột hoặc số hàng của terminal.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65535
+    },
+    "PeerInfo": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "HelloParams": {
+      "description": "Tham số của hello, yêu cầu đầu tiên của client.",
+      "type": "object",
+      "required": ["proto", "client"],
+      "properties": {
+        "proto": { "const": 1 },
+        "client": { "$ref": "#/$defs/PeerInfo" },
+        "capabilities": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Capability" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "HelloResult": {
+      "description": "Kết quả của hello. machine_id rỗng khi agent chưa được thêm vào server.",
+      "type": "object",
+      "required": ["proto", "agent", "machine_id", "os_user"],
+      "properties": {
+        "proto": { "const": 1 },
+        "agent": { "$ref": "#/$defs/PeerInfo" },
+        "machine_id": {
+          "oneOf": [
+            { "const": "" },
+            { "$ref": "#/$defs/ID" }
+          ]
+        },
+        "os_user": { "type": "string", "minLength": 1 },
+        "capabilities": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Capability" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "SessionInfo": {
+      "description": "Một phiên terminal đang sống trên máy.",
+      "type": "object",
+      "required": ["id", "account_id", "created_at", "last_active_at", "cols", "rows", "clients", "durable"],
+      "properties": {
+        "id": { "$ref": "#/$defs/ID" },
+        "title": { "type": "string" },
+        "account_id": { "$ref": "#/$defs/ID" },
+        "created_at": { "$ref": "#/$defs/Timestamp" },
+        "last_active_at": { "$ref": "#/$defs/Timestamp" },
+        "cols": { "$ref": "#/$defs/Dimension" },
+        "rows": { "$ref": "#/$defs/Dimension" },
+        "clients": { "type": "integer", "minimum": 0 },
+        "durable": { "type": "boolean" }
+      }
+    },
+    "SizeInfo": {
+      "description": "Kích thước PTY và client đang giữ quyền đặt kích thước.",
+      "type": "object",
+      "required": ["cols", "rows"],
+      "properties": {
+        "cols": { "$ref": "#/$defs/Dimension" },
+        "rows": { "$ref": "#/$defs/Dimension" },
+        "owner_client": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "SessionListResult": {
+      "description": "Kết quả của session.list. sessions vắng nghĩa là rỗng.",
+      "type": "object",
+      "properties": {
+        "sessions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SessionInfo" }
+        }
+      }
+    },
+    "SessionCreateParams": {
+      "description": "Tham số của session.create; kết quả là SessionInfo.",
+      "type": "object",
+      "required": ["cols", "rows"],
+      "properties": {
+        "cols": { "$ref": "#/$defs/Dimension" },
+        "rows": { "$ref": "#/$defs/Dimension" }
+      }
+    },
+    "SessionCloseParams": {
+      "description": "Tham số của session.close; kết quả là đối tượng rỗng.",
+      "type": "object",
+      "required": ["session_id"],
+      "properties": {
+        "session_id": { "$ref": "#/$defs/ID" }
+      }
+    },
+    "SessionSizeParams": {
+      "description": "Tham số của session.size; kết quả là SizeInfo. take đòi quyền chủ cỡ cho kết nối đang gọi.",
+      "type": "object",
+      "required": ["session_id"],
+      "properties": {
+        "session_id": { "$ref": "#/$defs/ID" },
+        "take": { "type": "boolean" }
+      }
+    },
+    "EventsSubscribeParams": {
+      "description": "Tham số của events.subscribe. Mỗi phần tử là một chủ đề hoặc mẫu <tiền tố>.* khớp mọi chủ đề bắt đầu bằng <tiền tố>.",
+      "type": "object",
+      "required": ["topics"],
+      "properties": {
+        "topics": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*(\\.([a-z][a-z0-9_]*|\\*))*$" }
+        }
+      }
+    },
+    "EventsSubscribeResult": {
+      "description": "Các mẫu agent chấp nhận; mẫu agent không biết bị bỏ qua và không có mặt ở đây.",
+      "type": "object",
+      "properties": {
+        "topics": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "SessionResizedData": {
+      "description": "Data của sự kiện session.resized.",
+      "type": "object",
+      "required": ["id", "cols", "rows"],
+      "properties": {
+        "id": { "$ref": "#/$defs/ID" },
+        "cols": { "$ref": "#/$defs/Dimension" },
+        "rows": { "$ref": "#/$defs/Dimension" },
+        "owner_client": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "Event": {
+      "description": "Tham số của notification event. Hình dạng data phụ thuộc topic; chủ đề lạ phải được bỏ qua nên data chỉ cần là đối tượng.",
+      "type": "object",
+      "required": ["topic", "ts", "data"],
+      "properties": {
+        "topic": { "type": "string", "minLength": 1 },
+        "ts": { "$ref": "#/$defs/Timestamp" },
+        "data": { "type": "object" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["topic"],
+            "properties": {
+              "topic": { "enum": ["session.created", "session.closed", "session.attached", "session.detached"] }
+            }
+          },
+          "then": { "properties": { "data": { "$ref": "#/$defs/SessionInfo" } } }
+        },
+        {
+          "if": {
+            "required": ["topic"],
+            "properties": { "topic": { "const": "session.resized" } }
+          },
+          "then": { "properties": { "data": { "$ref": "#/$defs/SessionResizedData" } } }
+        }
+      ]
+    },
+    "ErrorData": {
+      "description": "Nội dung data của lỗi -32001..-32004 (JSON-RPC của agent và của kênh đồng bộ).",
+      "type": "object",
+      "properties": {
+        "reason": { "type": "string", "minLength": 1 },
+        "retry_after": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

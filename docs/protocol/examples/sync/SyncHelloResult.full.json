@@ -1,0 +1,11 @@
+{
+  "proto": 1,
+  "server_version": "0.1.0",
+  "nonce": "ulxntVpW5gDrQi3Y2HdwvQ==",
+  "capabilities": [
+    "policy.v1",
+    "status.v1",
+    "audit.v1",
+    "emergency.v1"
+  ]
+}
