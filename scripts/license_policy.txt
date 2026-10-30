@@ -1,0 +1,48 @@
+# Chính sách giấy phép phụ thuộc của rterm. Ba cổng (Go, Dart, PyPI) cùng đọc tệp này.
+#
+# Mục tiêu: giữ mọi lựa chọn giấy phép cho chính sản phẩm, nên chỉ nhận giấy phép
+# dễ dãi và cấm copyleft. Giấy phép không nằm trong allow hay deny (LGPL, MPL, EPL…)
+# là đỏ để người dùng quyết từng trường hợp; gói không nhận ra được giấy phép cũng đỏ.
+# Người dùng đồng ý thì ghi một dòng exception: đó là kết luận của người đã đọc văn bản
+# giấy phép của gói. Cả ba cổng áp ngoại lệ theo cùng quy tắc:
+#   - giấy phép cổng nhận ra được thì ngoại lệ phải ghi đúng mã đó, để gói đổi sang
+#     giấy phép khác vẫn bị chặn lại;
+#   - phần giấy phép cổng không nhận ra được thì ngoại lệ của gói gỡ được, dù ghi mã nào;
+#   - mã nằm trong deny không bao giờ được cho qua, kể cả khi ghi trong ngoại lệ.
+#
+# Cú pháp: mỗi dòng một mục; bỏ qua dòng trống và dòng bắt đầu bằng #.
+#   allow <mã-SPDX>
+#   deny <mã-SPDX | tiền-tố*>
+#   exception <hệ> <gói> <mã-SPDX> <phạm-vi> <lý do, phần còn lại của dòng>
+#     hệ: go | pub | pypi
+#     phạm-vi: runtime (gói vào bản phát hành) | dev (chỉ dùng khi phát triển, kiểm thử)
+# Biểu thức SPDX: AND lấy mức tệ nhất của các vế, OR lấy mức tốt nhất.
+# Giới hạn nhận diện hiện tại của cổng Go và Dart: xem docs/code-standards.md, mục
+# "Phụ thuộc và giấy phép".
+
+allow MIT
+allow MIT-0
+allow Apache-2.0
+allow BSD-2-Clause
+allow BSD-3-Clause
+allow 0BSD
+allow ISC
+allow Zlib
+allow BSL-1.0
+allow PSF-2.0
+allow Python-2.0
+allow Unlicense
+allow CC0-1.0
+# Unicode License v3 (Unicode-3.0; licenseclassifier nhận văn bản này là Unicode-DFS-2016): dễ
+# dãi như MIT, chỉ buộc giữ thông báo bản quyền. Bảng dữ liệu của gói characters, gói mà mọi app
+# Flutter đều kéo vào, theo giấy phép này. Văn bản giấy phép nằm ở third_party/ của gói, nơi cổng
+# chưa đọc tới (xem giới hạn nhận diện ở trên), nên hai dòng này ghi sẵn quyết định cho lúc cổng
+# đọc được thư mục con. Người dùng chấp nhận ngày 2026-10-30.
+allow Unicode-3.0
+allow Unicode-DFS-2016
+
+deny GPL-*
+deny AGPL-*
+
+exception pypi certifi MPL-2.0 dev Chỉ đến qua httpx để dùng TestClient khi kiểm thử, không có trong image runtime; người dùng chấp nhận ngày 2026-10-29.
+exception pypi pathspec MPL-2.0 dev Chỉ đến qua mypy khi kiểm kiểu, không có trong image runtime; người dùng chấp nhận ngày 2026-10-29.

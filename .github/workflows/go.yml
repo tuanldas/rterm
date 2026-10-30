@@ -1,0 +1,147 @@
+# CI cho phần Go (agent và CLI): định dạng, phân tích tĩnh, lỗ hổng phụ thuộc,
+# test trên ba hệ điều hành agent hỗ trợ, build chéo không cgo, cổng giấy phép.
+#
+# Action ghim theo commit SHA (chú thích ghi bản tương ứng) để một tag bị đẩy
+# lại không đổi được mã chạy trong CI.
+name: go
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+      - ".golangci.yml"
+      # Test Go đọc hợp đồng, bản đóng băng định danh và product.json.
+      - "docs/protocol/**"
+      - "**/testdata/**"
+      - "product.json"
+      - "scripts/license_policy.txt"
+      - ".github/workflows/go.yml"
+  pull_request:
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+      - ".golangci.yml"
+      - "docs/protocol/**"
+      - "**/testdata/**"
+      - "product.json"
+      - "scripts/license_policy.txt"
+      - ".github/workflows/go.yml"
+
+permissions:
+  contents: read
+
+# Lần đẩy mới lên cùng PR huỷ lần chạy cũ đang dở. Lần chạy khác (đẩy lên main, chạy tay) có
+# nhóm riêng theo run_id nên không bị huỷ, cũng không phải xếp hàng chờ: nhóm dùng chung thì
+# GitHub vẫn huỷ lần chạy đang chờ, trong khi mỗi commit của main cần kết quả riêng.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: gofmt, vet, golangci-lint, govulncheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: gofmt
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "Tệp chưa chạy gofmt:"
+            echo "$unformatted"
+            exit 1
+          fi
+      - name: go vet
+        run: go vet ./...
+      # Bộ linter mặc định của golangci-lint v2 gồm staticcheck.
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: v2.12.2
+      - name: govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+
+  test:
+    name: test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: go test -race
+        if: runner.os != 'Windows'
+        run: go test -race -count=1 ./...
+      # Race detector trên Windows cần cgo, mà dự án build với CGO_ENABLED=0.
+      - name: go test
+        if: runner.os == 'Windows'
+        run: go test -count=1 ./...
+
+  cross-build:
+    name: build chéo CGO_ENABLED=0
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      # Agent phát hành là một tệp chạy tĩnh, không cgo, cho mỗi tổ hợp. Riêng
+      # build với CGO_ENABLED=0 không bắt được cgo: Go coi import "C" là ràng
+      # buộc build nên lặng lẽ bỏ tệp đó và build vẫn xanh. Vì vậy trước mỗi lần
+      # build, go list chạy với cgo bật (chỉ đọc mã, không gọi trình biên dịch C)
+      # để tệp import "C" hiện ra ở CgoFiles. Kiểm theo từng tổ hợp để bắt cả tệp
+      # chỉ build trên một hệ điều hành hay kiến trúc, trên đúng các gói mà build
+      # dùng. Phụ thuộc cần cgo mà không có bản Go thuần thì chính build sẽ đỏ.
+      - name: không cgo và go build linux/darwin/windows × amd64/arm64
+        run: |
+          set -euo pipefail
+          cgo_files='{{if .CgoFiles}}{{.ImportPath}}: {{join .CgoFiles " "}}{{end}}'
+          for goos in linux darwin windows; do
+            for goarch in amd64 arm64; do
+              echo "::group::$goos/$goarch"
+              found="$(CGO_ENABLED=1 GOOS="$goos" GOARCH="$goarch" go list -f "$cgo_files" ./... | sed '/^$/d')"
+              if [ -n "$found" ]; then
+                echo "::error::Có tệp dùng cgo khi build cho $goos/$goarch:"
+                echo "$found"
+                exit 1
+              fi
+              CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build ./...
+              echo "::endgroup::"
+            done
+          done
+
+  licenses:
+    name: cổng giấy phép Go
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      # Wrapper tự cài bản go-licenses đã ghim rồi đối chiếu với
+      # scripts/license_policy.txt trên linux, darwin, windows.
+      - name: go-licenses theo chính sách
+        run: go run ./scripts

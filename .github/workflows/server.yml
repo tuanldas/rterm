@@ -1,0 +1,125 @@
+# CI của server tài khoản (Python, thư mục server/).
+#
+# Chạy khi đổi mã server hoặc thứ server kiểm chéo: hợp đồng giao thức, product.json, bản đóng
+# băng định danh trên dây dùng chung với Go, cổng giấy phép PyPI.
+name: server
+
+on:
+  pull_request:
+    paths: &server-paths
+      - "server/**"
+      - "docs/protocol/**"
+      - "product.json"
+      - "scripts/check_python_licenses.py"
+      - "scripts/license_policy.txt"
+      - "internal/protocol/testdata/wire_names.golden.json"
+      - ".github/workflows/server.yml"
+  push:
+    branches: [main]
+    paths: *server-paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Lần đẩy mới lên cùng PR huỷ lần chạy cũ đang dở. Lần chạy khác (đẩy lên main, chạy tay) có
+# nhóm riêng theo run_id nên không bị huỷ, cũng không phải xếp hàng chờ: nhóm dùng chung thì
+# GitHub vẫn huỷ lần chạy đang chờ, trong khi mỗi commit của main cần kết quả riêng.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: server
+
+env:
+  # Ghim cùng bản uv đã sinh uv.lock (và cùng dải uv_build trong pyproject.toml); nâng có chủ đích.
+  UV_VERSION: "0.11.22"
+  PIP_AUDIT_VERSION: "2.10.1"
+
+jobs:
+  check:
+    name: Lint, kiểu và test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          working-directory: server
+          cache-dependency-glob: uv.lock
+      - name: uv.lock khớp pyproject.toml
+        run: uv lock --check
+      - name: Mọi phụ thuộc có wheel cho Linux (không dựng từ mã nguồn)
+        run: uv sync --frozen --no-install-project --no-build
+      - name: Cài môi trường đủ nhóm
+        run: uv sync --frozen
+      # Cổng giấy phép nằm ngoài server/ nên truyền đường dẫn và cấu hình tường minh.
+      - name: ruff check
+        run: uv run --frozen ruff check --config pyproject.toml . ../scripts/check_python_licenses.py
+      - name: ruff format --check
+        run: uv run --frozen ruff format --check --config pyproject.toml . ../scripts/check_python_licenses.py
+      - name: mypy
+        run: uv run --frozen mypy
+      - name: pytest
+        run: uv run --frozen pytest
+
+  licenses:
+    name: Giấy phép và lỗ hổng
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          working-directory: server
+          cache-dependency-glob: uv.lock
+      # Lượt dev: môi trường đủ nhóm, ngoại lệ phạm vi dev trong license_policy.txt có hiệu lực.
+      - name: Cổng giấy phép (dev)
+        run: |
+          uv sync --frozen
+          uv run --no-sync python ../scripts/check_python_licenses.py --scope dev
+      # Lượt runtime: đúng thứ nằm trong image, chặt, ngoại lệ dev không áp.
+      - name: Cổng giấy phép (runtime)
+        run: |
+          uv sync --frozen --no-default-groups --group app
+          uv run --no-sync python ../scripts/check_python_licenses.py --scope runtime
+      - name: pip-audit trên closure runtime
+        run: |
+          uv export --frozen --no-default-groups --group app --no-emit-project \
+            --format requirements-txt --output-file "$RUNNER_TEMP/runtime-requirements.txt"
+          uvx "pip-audit@${PIP_AUDIT_VERSION}" --strict --disable-pip --require-hashes \
+            --progress-spinner off -r "$RUNNER_TEMP/runtime-requirements.txt"
+
+  platforms:
+    # Agent chạy trên ba hệ điều hành và e2e cần chạy server cùng chỗ, nên phụ thuộc thiếu wheel
+    # cho macOS hay Windows phải lộ ngay từ bây giờ.
+    name: Cài đặt trên ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          working-directory: server
+          cache-dependency-glob: uv.lock
+      - name: Mọi phụ thuộc có wheel cho nền tảng (không dựng từ mã nguồn)
+        run: uv sync --frozen --no-install-project --no-build
+      - name: Cài môi trường đủ nhóm
+        run: uv sync --frozen
+      - name: Lệnh version chạy được
+        run: uv run --frozen rterm-server version

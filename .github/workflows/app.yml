@@ -1,0 +1,141 @@
+# CI cho app Flutter Android: định dạng, phân tích, test (gồm conformance với
+# docs/protocol), cổng giấy phép pub, build APK debug.
+#
+# Action ghim theo commit SHA (chú thích ghi bản tương ứng). subosito/flutter-action
+# tự cache bằng actions/cache theo tag, nên cache của nó để tắt: bước dry-run lấy
+# đường dẫn và khoá cache, actions/cache đã ghim SHA làm phần còn lại.
+name: app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      # Test của app đọc hợp đồng, product.json, bản đóng băng định danh trên dây và kiểm logic
+      # cổng giấy phép.
+      - "docs/protocol/**"
+      - "product.json"
+      - "internal/protocol/testdata/wire_names.golden.json"
+      - "scripts/check_dart_licenses.dart"
+      - "scripts/license_policy.txt"
+      - ".github/workflows/app.yml"
+  pull_request:
+    paths:
+      - "app/**"
+      - "docs/protocol/**"
+      - "product.json"
+      - "internal/protocol/testdata/wire_names.golden.json"
+      - "scripts/check_dart_licenses.dart"
+      - "scripts/license_policy.txt"
+      - ".github/workflows/app.yml"
+
+permissions:
+  contents: read
+
+# Lần đẩy mới lên cùng PR huỷ lần chạy cũ đang dở. Lần chạy khác (đẩy lên main, chạy tay) có
+# nhóm riêng theo run_id nên không bị huỷ, cũng không phải xếp hàng chờ: nhóm dùng chung thì
+# GitHub vẫn huỷ lần chạy đang chờ, trong khi mỗi commit của main cần kết quả riêng.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: "3.47.8"
+
+jobs:
+  check:
+    name: format, analyze, test, cổng giấy phép
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Tra đường dẫn và khoá cache của Flutter
+        id: flutter-meta
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          dry-run: true
+      - name: Cache SDK Flutter
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.flutter-meta.outputs.CACHE-PATH }}
+          key: ${{ steps.flutter-meta.outputs.CACHE-KEY }}
+      - name: Cache gói pub
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.flutter-meta.outputs.PUB-CACHE-PATH }}
+          key: ${{ steps.flutter-meta.outputs.PUB-CACHE-KEY }}-${{ hashFiles('app/pubspec.lock') }}
+      - name: Cài Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+      # Sinh cả AppLocalizations từ ARB (generate: true trong pubspec.yaml).
+      - name: flutter pub get
+        run: flutter pub get --enforce-lockfile
+      - name: dart format
+        working-directory: .
+        run: dart format --output=none --set-exit-if-changed app scripts/check_dart_licenses.dart
+      - name: flutter analyze
+        run: flutter analyze
+      - name: dart analyze cổng giấy phép
+        working-directory: .
+        run: dart analyze --fatal-infos scripts/check_dart_licenses.dart
+      - name: flutter test
+        run: flutter test
+      - name: Cổng giấy phép pub
+        working-directory: .
+        run: dart run scripts/check_dart_licenses.dart
+
+  build-apk:
+    name: build APK debug
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Android Gradle Plugin cần JDK 17 trở lên; ghim 17 để mọi máy build như nhau.
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+          cache-dependency-path: |
+            app/android/**/*.gradle.kts
+            app/android/gradle/wrapper/gradle-wrapper.properties
+      - name: Tra đường dẫn và khoá cache của Flutter
+        id: flutter-meta
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          dry-run: true
+      - name: Cache SDK Flutter
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.flutter-meta.outputs.CACHE-PATH }}
+          key: ${{ steps.flutter-meta.outputs.CACHE-KEY }}
+      - name: Cache gói pub
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.flutter-meta.outputs.PUB-CACHE-PATH }}
+          key: ${{ steps.flutter-meta.outputs.PUB-CACHE-KEY }}-${{ hashFiles('app/pubspec.lock') }}
+      - name: Cài Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+      - name: flutter pub get
+        run: flutter pub get --enforce-lockfile
+      - name: flutter build apk --debug
+        run: flutter build apk --debug
