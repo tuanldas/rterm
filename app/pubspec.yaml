@@ -1,0 +1,30 @@
+name: rterm
+description: "Ứng dụng Android quản lý và mở terminal trên các máy của tài khoản."
+# App phân phối dưới dạng APK, không đăng lên pub.dev.
+publish_to: 'none'
+
+# versionName và versionCode của APK; bản phát hành gán đè bằng
+# --build-name và --build-number lúc build.
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  # flutter_localizations ghim intl theo bản Flutter; ràng buộc này phải khớp
+  # với bản đó, nếu không `flutter pub get` báo xung đột ngay.
+  intl: ^0.20.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  # Sinh AppLocalizations từ lib/l10n/*.arb theo l10n.yaml.
+  generate: true

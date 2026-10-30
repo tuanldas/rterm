@@ -1,0 +1,16 @@
+{
+  "@@locale": "vi",
+  "homeWelcome": "Chào mừng đến với {productName}",
+  "@homeWelcome": {
+    "description": "Dòng chào trên màn hình đầu tiên; productName lấy từ lib/core/product.dart.",
+    "placeholders": {
+      "productName": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNoServer": "Chưa kết nối máy chủ nào.",
+  "@homeNoServer": {
+    "description": "Trạng thái khi app chưa được thêm máy chủ tài khoản."
+  }
+}
