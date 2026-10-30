@@ -1,0 +1,14 @@
+{
+  "$comment": "Nguồn trung lập cho định danh sản phẩm. Go (internal/product), Dart (app/lib/core/product.dart) và Python (server/src/rterm_server/product.py) giữ hằng riêng, có test chéo so với tệp này. Định danh trên dây (method, capability, biến môi trường phiên, ngữ cảnh chữ ký) không nằm ở đây.",
+  "name": "rterm",
+  "agent_binary": "rterm",
+  "server_image": "rterm-server",
+  "app_id": "com.tuanldas.rterm",
+  "default_agent_port": 7022,
+  "default_server_port": 7443,
+  "env_prefix": "RTERM_",
+  "token_prefix": "rt_",
+  "url_scheme": "rterm",
+  "state_dir_name": "rterm",
+  "legacy_names": []
+}

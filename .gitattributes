@@ -1,0 +1,18 @@
+# Ép LF ở mọi nơi để gofmt và dart format cho cùng kết quả trên Windows,
+# nơi runner GitHub Actions mặc định bật autocrlf.
+* text=auto eol=lf
+
+# Script Windows cần CRLF để PowerShell và cmd đọc đúng.
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Corpus terminal chứa \r\n và chuỗi escape thật; chuyển dòng sẽ làm hỏng dữ liệu kiểm thử.
+testdata/vt-corpus/** binary
+*.vt binary
+
+# Tệp nhị phân không bao giờ bị chuyển dòng.
+*.png binary
+*.jpg binary
+*.ico binary
+*.jar binary

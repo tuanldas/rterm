@@ -1,0 +1,47 @@
+# Bí mật và khoá: không bao giờ vào repo.
+*.key
+*.pem
+*.p12
+*.jks
+*.keystore
+key.properties
+.env
+.env.*
+!.env.example
+
+# Dữ liệu chạy thử của server và agent. Neo theo đúng vị trí: mẫu không neo như `data/`
+# nuốt luôn mã nguồn đặt trong thư mục tên data (ví dụ app/lib/data/).
+/data/
+/server/data/
+*.db
+*.db-shm
+*.db-wal
+
+# Sản phẩm build Go.
+/bin/
+/dist/
+*.test
+*.out
+coverage.*
+
+# Python (server và script cổng giấy phép).
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Flutter và Dart.
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+/app/build/
+app/android/local.properties
+
+# IDE và hệ điều hành.
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
