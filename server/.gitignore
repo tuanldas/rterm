@@ -1,0 +1,7 @@
+# Môi trường, bytecode và bộ đệm của công cụ Python: sinh lại được, không bao giờ vào repo.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/

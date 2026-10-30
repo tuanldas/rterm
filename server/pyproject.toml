@@ -1,0 +1,80 @@
+[project]
+name = "rterm-server"
+# Phiên bản phát hành thật là tag của image, ghi vào src/rterm_server/_version.py lúc dựng
+# image; số ở đây chỉ để uv dựng gói và không được đọc ở đâu.
+version = "0.0.0"
+description = "Server tài khoản: danh tính và quyền truy cập máy, đồng bộ quyền xuống agent."
+requires-python = "==3.14.*"
+# Phụ thuộc nằm hết ở [dependency-groups] để image chỉ cài đúng nhóm runtime.
+dependencies = []
+
+[project.scripts]
+rterm-server = "rterm_server.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.11.22,<0.12"]
+build-backend = "uv_build"
+
+# Ghim chính xác để tái lập và để cổng giấy phép kiểm đúng thứ sẽ chạy. Phụ thuộc gián tiếp
+# do uv.lock giữ. Nâng phiên bản là việc có chủ đích: đọc changelog, chạy lại cổng giấy phép.
+[dependency-groups]
+# Runtime: đúng thứ nằm trong image (uv sync --no-default-groups --group app).
+app = [
+    "fastapi==0.162.0",
+    "starlette==1.10.0",
+    # Không dùng extra [standard]: HTTP chạy trên h11 là đủ, bớt gói phải qua cổng giấy phép.
+    "uvicorn==0.54.0",
+    # Khai tường minh: thiếu cả websockets lẫn wsproto thì Uvicorn từ chối nâng cấp WebSocket.
+    "websockets==17.3",
+    "pydantic==2.14.1",
+    "cryptography==50.0.2",
+    "argon2-cffi==25.1.0",
+    "pyotp==2.10.0",
+]
+# Chỉ khi phát triển và kiểm thử, không vào image.
+dev = [
+    "pytest==9.2.0",
+    # Cho TestClient của Starlette; kéo theo certifi (MPL-2.0), ngoại lệ dev trong license_policy.txt.
+    "httpx==0.28.1",
+    "ruff==0.17.3",
+    # Kéo theo pathspec (MPL-2.0), ngoại lệ dev trong license_policy.txt.
+    "mypy==2.4.1",
+    # Không dùng extra [format]: nó kéo rfc3987 (GPL). Schema của hợp đồng không dùng format.
+    "jsonschema==4.26.0",
+]
+
+[tool.uv]
+# Máy dev và CI cài đủ; image chọn nhóm bằng --no-default-groups --group app.
+default-groups = ["app", "dev"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# S: bảo mật (SQL ghép chuỗi, bí mật viết thẳng); ASYNC: gọi hàm chặn trong async def;
+# DTZ: datetime không múi giờ.
+select = ["E", "F", "I", "B", "UP", "S", "ASYNC", "DTZ"]
+
+[tool.ruff.lint.per-file-ignores]
+# pytest dùng assert để kiểm.
+"tests/**" = ["S101"]
+
+[tool.mypy]
+strict = true
+warn_unreachable = true
+# Chỉ kiểm mã chạy thật: gói server và cổng giấy phép PyPI (chạy từ thư mục server/).
+# Test không kiểm kiểu để viết ngắn gọn.
+files = ["src", "../scripts/check_python_licenses.py"]
+plugins = ["pydantic.mypy"]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers", "--strict-config"]
+# Danh sách tham số rỗng (ví dụ đọc nhầm thư mục) là lỗi, không phải bỏ qua trong im lặng.
+empty_parameter_set_mark = "fail_at_collect"
+xfail_strict = true
