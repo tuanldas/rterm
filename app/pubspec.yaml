@@ -18,6 +18,7 @@ dependencies:
   # flutter_localizations ghim intl theo bản Flutter; ràng buộc này phải khớp
   # với bản đó, nếu không `flutter pub get` báo xung đột ngay.
   intl: ^0.20.3
+  libsignal_protocol_dart: 0.8.2
 
 dev_dependencies:
   flutter_test:

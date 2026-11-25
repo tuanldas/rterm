@@ -2,6 +2,7 @@
 package main
 
 import (
+	_ "example.com/thugpl"
 	"fmt"
 	"io"
 	"os"
