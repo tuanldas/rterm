@@ -28,6 +28,9 @@ on:
       - "scripts/check_dart_licenses.dart"
       - "scripts/license_policy.txt"
       - ".github/workflows/app.yml"
+  # Chạy tay khi cần bằng chứng CI mà push không khớp bộ lọc đường dẫn, ví dụ lần push tạo
+  # nhánh đầu tiên: commit gốc không có commit cha để so nên GitHub coi như không tệp nào đổi.
+  workflow_dispatch:
 
 permissions:
   contents: read
